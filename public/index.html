@@ -61,8 +61,15 @@
     .form-card h2 { font-size: 22px; margin-bottom: 6px; }
     .form-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
 
-    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-    @media (max-width: 700px) { .form-row { grid-template-columns: 1fr; } }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .form-row, .form-row-2 { grid-template-columns: 1fr; } }
+    .field.hidden { display: none; }
+    .specialization-hint {
+      font-size: 12px;
+      color: var(--accent2);
+      margin-top: 5px;
+    }
 
     .field label {
       display: block;
@@ -327,7 +334,7 @@
       </div>
       <div class="field">
         <label>Domain / Role</label>
-        <select id="domain">
+        <select id="domain" onchange="updateSpecialization()">
           <option value="">Select domain...</option>
           <optgroup label="Engineering">
             <option value="Software Engineering (Backend)">Software Engineering – Backend</option>
@@ -335,7 +342,7 @@
             <option value="Full Stack Development">Full Stack Development</option>
             <option value="Data Engineering">Data Engineering</option>
             <option value="DevOps & Cloud Engineering">DevOps & Cloud Engineering</option>
-            <option value="Mobile Development (Android/iOS)">Mobile Development</option>
+            <option value="Mobile Development">Mobile Development</option>
             <option value="Machine Learning Engineering">Machine Learning Engineering</option>
             <option value="Embedded Systems">Embedded Systems</option>
           </optgroup>
@@ -361,11 +368,32 @@
             <option value="Financial Analysis">Financial Analysis</option>
             <option value="Risk Management">Risk Management</option>
           </optgroup>
+          <optgroup label="Marketing">
+            <option value="Marketing">Marketing (General)</option>
+            <option value="Digital Marketing">Digital Marketing</option>
+            <option value="Content Marketing">Content Marketing</option>
+            <option value="SEO / Organic Growth">SEO / Organic Growth</option>
+            <option value="Paid Ads / PPC / SEM">Paid Ads / PPC / SEM</option>
+            <option value="Social Media Marketing">Social Media Marketing</option>
+            <option value="Product Marketing">Product Marketing</option>
+            <option value="Brand Marketing">Brand Marketing</option>
+            <option value="Growth Marketing">Growth Marketing</option>
+            <option value="Email Marketing">Email Marketing</option>
+            <option value="Performance Marketing">Performance Marketing</option>
+          </optgroup>
+          <optgroup label="Sales">
+            <option value="Sales">Sales (General)</option>
+            <option value="B2B Sales">B2B Sales</option>
+            <option value="B2C Sales">B2C Sales</option>
+            <option value="Enterprise Sales">Enterprise Sales</option>
+            <option value="Inside Sales">Inside Sales</option>
+            <option value="Sales Development Representative (SDR)">SDR / Business Development</option>
+          </optgroup>
           <optgroup label="Other">
             <option value="Human Resources">Human Resources</option>
-            <option value="Marketing">Marketing</option>
-            <option value="Sales">Sales</option>
+            <option value="Recruitment / Talent Acquisition">Recruitment / Talent Acquisition</option>
             <option value="Customer Success">Customer Success</option>
+            <option value="Operations">Operations</option>
           </optgroup>
         </select>
       </div>
@@ -378,6 +406,16 @@
           <option value="Mid-Level (3–6 years)">Mid-Level (3–6 years)</option>
           <option value="Senior (6–10 years)">Senior (6–10 years)</option>
           <option value="Lead / Principal (10+ years)">Lead / Principal (10+ years)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Specialization row — shown only for domains that have sub-specializations -->
+    <div class="form-row-2" id="spec-row" style="display:none">
+      <div class="field" id="spec-field">
+        <label>Specialization <span style="color:var(--accent2);font-size:11px;text-transform:none;letter-spacing:0">(optional — makes questions more specific)</span></label>
+        <select id="specialization">
+          <option value="">All areas / General</option>
         </select>
       </div>
     </div>
@@ -404,6 +442,52 @@
 </div>
 
 <script>
+  // Sub-specializations per domain
+  const specializations = {
+    "Marketing": ["Brand Marketing","Campaign Management","Go-to-Market Strategy"],
+    "Digital Marketing": ["Google Ads","Meta Ads","Analytics & Reporting","Marketing Automation"],
+    "Content Marketing": ["Blog & SEO Writing","Video Content","Podcast & Audio","Content Strategy","Editorial Planning"],
+    "SEO / Organic Growth": ["Technical SEO","On-Page SEO","Link Building","Local SEO","SEO Analytics"],
+    "Paid Ads / PPC / SEM": ["Google Ads","Meta / Facebook Ads","LinkedIn Ads","Programmatic Advertising","Amazon Ads"],
+    "Social Media Marketing": ["Instagram","LinkedIn","Twitter / X","YouTube","TikTok","Community Management"],
+    "Product Marketing": ["Go-to-Market","Competitive Intelligence","Positioning & Messaging","Launch Strategy"],
+    "Growth Marketing": ["A/B Testing","Funnel Optimization","Referral Programs","Retention Marketing"],
+    "Performance Marketing": ["ROI Optimization","Attribution Modeling","CRO","Retargeting"],
+    "Software Engineering (Backend)": ["Java / Spring Boot","Python / Django / FastAPI","Node.js","Go","System Design","Microservices","Databases & SQL"],
+    "Software Engineering (Frontend)": ["React","Angular","Vue.js","TypeScript","Web Performance","CSS / Tailwind"],
+    "Full Stack Development": ["MERN Stack","MEAN Stack","Django + React","Next.js","Ruby on Rails"],
+    "Data Engineering": ["Apache Spark","Kafka","Airflow","dbt","SQL & Data Warehousing","ETL Pipelines"],
+    "DevOps & Cloud Engineering": ["AWS","GCP","Azure","Kubernetes & Docker","CI/CD","Infrastructure as Code"],
+    "Mobile Development": ["Android (Kotlin/Java)","iOS (Swift)","Flutter","React Native"],
+    "Machine Learning Engineering": ["NLP","Computer Vision","MLOps","Deep Learning","Recommendation Systems"],
+    "Data Science": ["Statistical Modeling","Machine Learning","NLP","Time Series","Experimentation & A/B Testing"],
+    "Data Analytics": ["SQL","Tableau","Power BI","Python for Analytics","Excel / Sheets"],
+    "Business Intelligence": ["Tableau","Power BI","Looker","Data Modeling","ETL"],
+    "Product Management": ["B2B Product","B2C Product","Platform / API","Mobile Product","Growth PM"],
+    "Investment Banking": ["M&A","Equity Research","Capital Markets","Valuation","Financial Modeling"],
+    "Financial Analysis": ["FP&A","Valuation","Budgeting & Forecasting","Financial Modeling"],
+    "Sales": ["Prospecting","Negotiation","CRM Tools","Sales Operations"],
+    "B2B Sales": ["Enterprise Sales","SaaS Sales","Solution Selling","Account Management"],
+    "Human Resources": ["Talent Acquisition","HR Operations","Performance Management","L&D","HRBP"],
+    "Recruitment / Talent Acquisition": ["Tech Recruiting","Volume Hiring","Sourcing","Employer Branding"],
+  };
+
+  function updateSpecialization() {
+    const domain = document.getElementById("domain").value;
+    const specRow = document.getElementById("spec-row");
+    const specSelect = document.getElementById("specialization");
+
+    const options = specializations[domain];
+    if (options && options.length > 0) {
+      specSelect.innerHTML = '<option value="">All areas / General</option>' +
+        options.map(o => `<option value="${o}">${o}</option>`).join("");
+      specRow.style.display = "grid";
+    } else {
+      specRow.style.display = "none";
+      specSelect.innerHTML = '<option value="">All areas / General</option>';
+    }
+  }
+
   let generating = false;
 
   async function generate() {
@@ -411,7 +495,11 @@
 
     const company = document.getElementById("company").value.trim();
     const domain = document.getElementById("domain").value;
+    const specialization = document.getElementById("specialization").value;
     const level = document.getElementById("level").value;
+
+    // Build full domain string
+    const fullDomain = specialization ? `${domain} – ${specialization}` : domain;
 
     if (!company) { alert("Please enter a company name."); return; }
     if (!domain) { alert("Please select a domain."); return; }
@@ -433,7 +521,7 @@
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, domain, level }),
+        body: JSON.stringify({ company, domain: fullDomain, level }),
       });
 
       const reader = response.body.getReader();
