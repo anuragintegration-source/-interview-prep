@@ -68,7 +68,7 @@ Generate interview questions strictly tailored to this experience level. The sam
 
     const stream = client.messages.stream({
       model: "claude-haiku-4-5",
-      max_tokens: 4000,
+      max_tokens: 7000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });
