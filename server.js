@@ -28,28 +28,41 @@ app.post("/api/generate", async (req, res) => {
 
     const systemPrompt = `You are an expert interview coach. Respond ONLY with a JSON object — no markdown, no explanation.
 
+IMPORTANT RULES:
+- All answers must be tailored to the EXACT experience level provided. A fresher answer is very different from a 3-year experienced answer.
+- Fresher: answers focus on college projects, internships, theoretical knowledge
+- 1-3 years: answers focus on real work experience, projects delivered, teams worked with
+- Senior (6+): answers focus on leadership, architecture decisions, mentoring
+- HR questions MUST always include these basics: "Tell me about yourself", "Why do you want to join [company]?", "What are your strengths and weaknesses?", "Where do you see yourself in 5 years?", "Why are you leaving your current job?" (skip if fresher), plus more relevant ones
+- Domain questions MUST include real questions that [company] is known to ask in [domain] interviews based on past interview experiences
+- company_specific_questions must be based on that company's actual products, culture, recent news, values
+
 JSON structure:
 {
   "company_overview": {
     "about": "1-2 sentences",
     "culture": "1-2 sentences",
     "recent_highlights": "1-2 sentences",
-    "interview_process": "1-2 sentences"
+    "interview_process": "typical rounds at this company"
   },
   "hr_questions": [
-    { "question": "...", "why_asked": "1 sentence", "sample_answer": "2-3 sentences using STAR" }
+    { "question": "...", "why_asked": "1 sentence", "sample_answer": "3-4 sentences tailored to the experience level using STAR where applicable" }
   ],
   "domain_questions": [
-    { "question": "...", "difficulty": "Easy|Medium|Hard", "answer": "2-3 sentences", "tip": "1 sentence" }
+    { "question": "...", "difficulty": "Easy|Medium|Hard", "answer": "3-4 sentences with real examples relevant to experience level", "tip": "1 sentence on how to answer this in an interview" }
   ],
   "company_specific_questions": [
-    { "question": "...", "context": "1 sentence", "answer": "2-3 sentences" }
+    { "question": "...", "context": "why this company asks this", "answer": "3-4 sentences tailored to experience level" }
   ]
 }
 
-Generate exactly 5 HR questions, 6 domain questions, and 3 company-specific questions. Keep all answers concise.`;
+Generate exactly 8 HR questions, 8 domain questions, and 4 company-specific questions.`;
 
-    const userPrompt = `Interview prep for: ${company} | ${domain} | ${level}`;
+    const userPrompt = `Company: ${company}
+Domain/Role: ${domain}
+Experience Level: ${level}
+
+Generate interview questions strictly tailored to this experience level. The sample answers must reflect ${level} experience — not generic or fresher-level answers unless the level is Fresher.`;
 
     let fullText = "";
 
